@@ -1,0 +1,36 @@
+---
+- name: My Playbook
+  hosts: bigips
+  connection: local
+  gather_facts: false
+
+  vars:
+    uri_method: POST
+
+  vars_files:
+  - ../creds/bigip_cred.yml
+
+  tasks:
+  - name: AS3 MQ
+    uri:
+      url: "https://{{inventory_hostname}}/mgmt/shared/appsvcs/declare"
+      user: "{{bigip_user}}"
+      password: "{{bigip_password}}"
+      method: "{{uri_method}}"
+      body: "{{ lookup('file','as3-declaration.json') }}"
+      force_basic_auth: yes
+      status_code: 200
+      body_format: json
+      validate_certs: false
+    register: as3_response
+    delay: 10
+    retries: 10
+
+  - name: DEBUG AS3 OUTPUT
+    debug:
+      msg: "{{as3_response}}"
+
+  - name: DEBUG AS3 DECLARATION OUTPUT
+    debug:
+      msg: "{{as3_response.json.declaration.MQ_01.APP01}}"      
+...
